@@ -35,6 +35,8 @@ class TanstackQueryDevtools {
   #hideDisabledQueries: Signal<boolean | undefined>
   #Component: DevtoolsComponentType | undefined
   #theme: Signal<Theme | undefined>
+  #isButtonDraggable: Signal<boolean | undefined>
+  #persistButtonPosition: Signal<boolean | undefined>
   #dispose?: () => void
 
   constructor(config: TanstackQueryDevtoolsConfig) {
@@ -51,6 +53,8 @@ class TanstackQueryDevtools {
       shadowDOMTarget,
       hideDisabledQueries,
       theme,
+      isButtonDraggable,
+      persistButtonPosition,
     } = config
     this.#client = createSignal(client)
     this.#queryFlavor = queryFlavor
@@ -64,6 +68,8 @@ class TanstackQueryDevtools {
     this.#errorTypes = createSignal(errorTypes)
     this.#hideDisabledQueries = createSignal(hideDisabledQueries)
     this.#theme = createSignal(theme)
+    this.#isButtonDraggable = createSignal(isButtonDraggable)
+    this.#persistButtonPosition = createSignal(persistButtonPosition)
   }
 
   setButtonPosition(position: DevtoolsButtonPosition) {
@@ -90,6 +96,14 @@ class TanstackQueryDevtools {
     this.#theme[1](theme)
   }
 
+  setIsButtonDraggable(isButtonDraggable: boolean) {
+    this.#isButtonDraggable[1](isButtonDraggable)
+  }
+
+  setPersistButtonPosition(persistButtonPosition: boolean) {
+    this.#persistButtonPosition[1](persistButtonPosition)
+  }
+
   mount<T extends HTMLElement>(el: T) {
     if (this.#isMounted) {
       throw new Error('Devtools is already mounted')
@@ -102,6 +116,8 @@ class TanstackQueryDevtools {
       const [hideDisabledQueries] = this.#hideDisabledQueries
       const [queryClient] = this.#client
       const [theme] = this.#theme
+      const [isButtonDraggable] = this.#isButtonDraggable
+      const [persistButtonPosition] = this.#persistButtonPosition
       let Devtools: DevtoolsComponentType
 
       if (this.#Component) {
@@ -139,6 +155,12 @@ class TanstackQueryDevtools {
             },
             get theme() {
               return theme()
+            },
+            get isButtonDraggable() {
+              return isButtonDraggable()
+            },
+            get persistButtonPosition() {
+              return persistButtonPosition()
             },
           }}
         />

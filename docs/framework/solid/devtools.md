@@ -76,6 +76,13 @@ function App() {
 - `position?: "top" | "bottom" | "left" | "right"`
   - Defaults to `bottom`
   - The position of the Solid Query devtools panel
+- `isButtonDraggable?: boolean`
+  - Defaults to `true`
+  - If `true`, the devtools button can be dragged to any position on the screen
+- `persistButtonPosition?: boolean`
+  - Defaults to `true`
+  - If `true`, the dragged position of the devtools button will be saved to localStorage and restored on page reload
+  - If `false`, the button will reset to its initial `buttonPosition` on page reload
 - `client?: QueryClient`,
   - Use this to use a custom QueryClient. Otherwise, the one from the nearest context will be used.
 - `errorTypes?: { name: string; initializer: (query: Query) => TError}`

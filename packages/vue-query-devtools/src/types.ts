@@ -48,6 +48,16 @@ export interface DevtoolsOptions {
    * Defaults to 'system'.
    */
   theme?: Theme
+  /**
+   * Set this to false to disable dragging the devtools button..
+   * Defaults to true.
+   */
+  isButtonDraggable?: boolean
+  /**
+   * Set this to false to reset the button to initial position when the page is refreshed.
+   * Defaults to true.
+   */
+  persistButtonPosition?: boolean
 }
 
 export interface DevtoolsPanelOptions {

@@ -21,6 +21,8 @@ const devtools = new TanstackQueryDevtools({
   shadowDOMTarget: props.shadowDOMTarget,
   hideDisabledQueries: props.hideDisabledQueries,
   theme: props.theme,
+  isButtonDraggable: props.isButtonDraggable,
+  persistButtonPosition: props.persistButtonPosition,
 })
 
 watchEffect(() => {
@@ -29,6 +31,8 @@ watchEffect(() => {
   devtools.setInitialIsOpen(props.initialIsOpen)
   devtools.setErrorTypes(props.errorTypes || [])
   devtools.setTheme(props.theme || 'system')
+  devtools.setIsButtonDraggable(props.isButtonDraggable ?? true)
+  devtools.setPersistButtonPosition(props.persistButtonPosition ?? true)
 })
 
 onMounted(() => {

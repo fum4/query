@@ -51,6 +51,16 @@ interface DevtoolsOptions {
    * Defaults to 'system'.
    */
   theme?: Theme
+  /**
+   * Set this to false to disable dragging the devtools button.
+   * Defaults to true.
+   */
+  isButtonDraggable?: boolean
+  /**
+   * Set this to false to reset the button to initial position when the page is refreshed.
+   * Defaults to true.
+   */
+  persistButtonPosition?: boolean
 }
 
 export default function SolidQueryDevtools(props: DevtoolsOptions) {
@@ -70,6 +80,8 @@ export default function SolidQueryDevtools(props: DevtoolsOptions) {
     shadowDOMTarget: props.shadowDOMTarget,
     hideDisabledQueries: props.hideDisabledQueries,
     theme: props.theme,
+    isButtonDraggable: props.isButtonDraggable,
+    persistButtonPosition: props.persistButtonPosition,
   })
 
   createEffect(() => {
@@ -100,6 +112,14 @@ export default function SolidQueryDevtools(props: DevtoolsOptions) {
 
   createEffect(() => {
     devtools.setTheme(props.theme || 'system')
+  })
+
+  createEffect(() => {
+    devtools.setIsButtonDraggable(props.isButtonDraggable ?? true)
+  })
+
+  createEffect(() => {
+    devtools.setPersistButtonPosition(props.persistButtonPosition ?? true)
   })
 
   onMount(() => {

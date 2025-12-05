@@ -126,6 +126,8 @@ export const withDevtools: WithDevtools = (
                 errorTypes,
                 buttonPosition,
                 initialIsOpen,
+                isButtonDraggable,
+                persistButtonPosition,
               } = devtoolsOptions()
 
               if (!shouldLoadTools) {
@@ -140,6 +142,8 @@ export const withDevtools: WithDevtools = (
                 position && devtools.setPosition(position)
                 errorTypes && devtools.setErrorTypes(errorTypes)
                 buttonPosition && devtools.setButtonPosition(buttonPosition)
+                isButtonDraggable && devtools.setIsButtonDraggable(isButtonDraggable)
+                persistButtonPosition && devtools.setPersistButtonPosition(persistButtonPosition)
                 typeof initialIsOpen === 'boolean' &&
                   devtools.setInitialIsOpen(initialIsOpen)
                 return

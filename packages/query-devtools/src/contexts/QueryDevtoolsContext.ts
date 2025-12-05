@@ -32,6 +32,8 @@ export interface QueryDevtoolsProps {
   onClose?: () => unknown
   hideDisabledQueries?: boolean
   theme?: Theme
+  isButtonDraggable?: boolean
+  persistButtonPosition?: boolean
 }
 
 export const QueryDevtoolsContext = createContext<QueryDevtoolsProps>({

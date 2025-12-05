@@ -76,6 +76,8 @@ export const injectDevtoolsPanel: InjectDevtoolsPanel = (
                 version: '5',
                 buttonPosition: 'bottom-left',
                 position: 'bottom',
+                isButtonDraggable: true,
+                persistButtonPosition: true,
                 initialIsOpen: true,
                 errorTypes,
                 styleNonce,

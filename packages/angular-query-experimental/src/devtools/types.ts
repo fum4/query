@@ -75,6 +75,16 @@ export interface DevtoolsOptions {
    * Set this to true to hide disabled queries from the devtools panel.
    */
   hideDisabledQueries?: boolean
+  /**
+   * Set this to false to disable dragging the devtools button.
+   * Defaults to true.
+   */
+  isButtonDraggable?: boolean
+  /**
+   * Set this to false to reset the button to initial position when the page is refreshed.
+   * Defaults to true.
+   */
+  persistButtonPosition?: boolean
 
   /**
    * Whether the developer tools should load.

@@ -47,6 +47,16 @@
      * Set this to true to hide disabled queries from the devtools panel.
      */
     hideDisabledQueries?: boolean
+    /**
+     * Set this to false to disable dragging the devtools button.
+     * Defaults to true.
+     */
+    isButtonDraggable?: boolean
+    /**
+     * Set this to false to reset the button to initial position when the page is refreshed.
+     * Defaults to true.
+     */
+    persistButtonPosition?: boolean
   }
 
   let {
@@ -58,6 +68,8 @@
     styleNonce = undefined,
     shadowDOMTarget = undefined,
     hideDisabledQueries = false,
+    isButtonDraggable = true,
+    persistButtonPosition = true,
   }: DevtoolsOptions = $props()
 
   let ref: HTMLDivElement
@@ -80,6 +92,8 @@
           styleNonce,
           shadowDOMTarget,
           hideDisabledQueries,
+          isButtonDraggable,
+          persistButtonPosition,
         })
 
         devtools.mount(ref)
@@ -101,6 +115,14 @@
 
     $effect(() => {
       devtools?.setErrorTypes(errorTypes)
+    })
+
+    $effect(() => {
+      devtools?.setIsButtonDraggable(isButtonDraggable)
+    })
+
+    $effect(() => {
+      devtools?.setPersistButtonPosition(persistButtonPosition)
     })
   }
 </script>

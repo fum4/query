@@ -60,6 +60,8 @@ import {
   DEFAULT_SORT_ORDER,
   DEFAULT_WIDTH,
   INITIAL_IS_OPEN,
+  IS_BUTTON_DRAGGABLE,
+  PERSIST_BUTTON_POSITION,
   POSITION,
   firstBreakpoint,
   secondBreakpoint,
@@ -155,6 +157,165 @@ export const Devtools: Component<DevtoolsPanelProps> = (props) => {
     )
   })
 
+  const isButtonDraggable = createMemo(() => {
+    return useQueryDevtoolsContext().isButtonDraggable ?? IS_BUTTON_DRAGGABLE
+  })
+
+  const persistButtonPosition = createMemo(() => {
+    return useQueryDevtoolsContext().persistButtonPosition ?? PERSIST_BUTTON_POSITION
+  })
+
+  const [isDragging, setIsDragging] = createSignal(false)
+  const [dragStartOffset, setDragStartOffset] = createSignal({ x: 0, y: 0 })
+  const [clickStartPosition, setClickStartPosition] = createSignal<{
+    x: number
+    y: number
+  } | null>(null)
+
+  const [viewportSize, setViewportSize] = createSignal({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  })
+
+  const clampPosition = (pos: { x: number; y: number }) => {
+    const buttonSize = 48
+    const edgeOffset = 12
+    const viewport = viewportSize()
+    return {
+      x: Math.max(
+        edgeOffset,
+        Math.min(pos.x, viewport.width - buttonSize - edgeOffset),
+      ),
+      y: Math.max(
+        edgeOffset,
+        Math.min(pos.y, viewport.height - buttonSize - edgeOffset),
+      ),
+    }
+  }
+
+  const getInitialDraggedPosition = () => {
+    if (!persistButtonPosition()) return null
+    const stored = props.localStore.buttonPosition
+    if (!stored) return null
+    try {
+      const parsed = JSON.parse(stored)
+      if (
+        parsed &&
+        typeof parsed.x === 'number' &&
+        typeof parsed.y === 'number'
+      ) {
+        return parsed as { x: number; y: number }
+      }
+    } catch {
+      // Invalid stored data, ignore
+    }
+    return null
+  }
+
+  const [unclampedPosition, setUnclampedPosition] = createSignal<{
+    x: number
+    y: number
+  } | null>(getInitialDraggedPosition())
+
+  const draggedPosition = createMemo(() => {
+    const pos = unclampedPosition()
+    return pos ? clampPosition(pos) : null
+  })
+
+  createEffect(() => {
+    if (!persistButtonPosition()) {
+      setUnclampedPosition(null)
+      if (props.localStore.buttonPosition) {
+        props.setLocalStore('buttonPosition', undefined as any)
+      }
+    }
+  })
+
+  let buttonRef!: HTMLButtonElement
+
+  const handleButtonMouseDown: JSX.EventHandler<
+    HTMLButtonElement,
+    MouseEvent
+  > = (event) => {
+    if (event.button !== 0 || !isButtonDraggable()) return
+
+    const buttonRect = event.currentTarget.getBoundingClientRect()
+    const startX = event.clientX
+    const startY = event.clientY
+    const clickThreshold = 5
+
+    setDragStartOffset({
+      x: startX - buttonRect.left,
+      y: startY - buttonRect.top,
+    })
+
+    setClickStartPosition({
+      x: startX,
+      y: startY,
+    })
+
+    setIsDragging(true)
+
+    const runDrag = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault()
+
+      const offset = dragStartOffset()
+      const newX = moveEvent.clientX - offset.x
+      const newY = moveEvent.clientY - offset.y
+
+      setUnclampedPosition({ x: newX, y: newY })
+    }
+
+    const unsubscribe = (upEvent: MouseEvent) => {
+      const startPos = clickStartPosition()
+
+      if (isDragging()) {
+        setIsDragging(false)
+      }
+
+      buttonRef.blur()
+
+      const wasDragged =
+        startPos &&
+        (Math.abs(upEvent.clientX - startPos.x) >= clickThreshold ||
+          Math.abs(upEvent.clientY - startPos.y) >= clickThreshold)
+
+      if (wasDragged && persistButtonPosition()) {
+        const pos = unclampedPosition()
+        if (pos) {
+          props.setLocalStore('buttonPosition', JSON.stringify(pos))
+        }
+      }
+
+      if (wasDragged) {
+        setClickStartPosition(null)
+      } else {
+        setTimeout(() => setClickStartPosition(null), 0)
+      }
+
+      document.removeEventListener('mousemove', runDrag, false)
+      document.removeEventListener('mouseup', unsubscribe, false)
+    }
+
+    document.addEventListener('mousemove', runDrag, false)
+    document.addEventListener('mouseup', unsubscribe, false)
+  }
+
+  const handleButtonClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (
+    event,
+  ) => {
+    const startPos = clickStartPosition()
+    const clickThreshold = 5
+
+    if (
+      startPos &&
+      Math.abs(event.clientX - startPos.x) < clickThreshold &&
+      Math.abs(event.clientY - startPos.y) < clickThreshold
+    ) {
+      props.setLocalStore('open', 'true')
+    }
+  }
+
   let transitionsContainerRef!: HTMLDivElement
   createEffect(() => {
     const root = transitionsContainerRef.parentElement as HTMLElement
@@ -185,6 +346,19 @@ export const Devtools: Component<DevtoolsPanelProps> = (props) => {
     window.addEventListener('focus', onFocus)
     onCleanup(() => {
       window.removeEventListener('focus', onFocus)
+    })
+  })
+
+  onMount(() => {
+    const handleResize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+    window.addEventListener('resize', handleResize)
+    onCleanup(() => {
+      window.removeEventListener('resize', handleResize)
     })
   })
 
@@ -256,18 +430,34 @@ export const Devtools: Component<DevtoolsPanelProps> = (props) => {
             <div
               class={cx(
                 styles().devtoolsBtn,
-                styles()[`devtoolsBtn-position-${buttonPosition()}`],
+                !draggedPosition() &&
+                  styles()[`devtoolsBtn-position-${buttonPosition()}`],
                 'tsqd-open-btn-container',
               )}
+              style={{
+                ...(draggedPosition()
+                  ? {
+                      transform: `translate(${draggedPosition()!.x}px, ${draggedPosition()!.y}px)`,
+                      left: '0',
+                      top: '0',
+                    }
+                  : {}),
+              }}
             >
               <div aria-hidden="true">
                 <TanstackLogo />
               </div>
               <button
+                ref={buttonRef}
                 type="button"
                 aria-label="Open Tanstack query devtools"
-                onClick={() => props.setLocalStore('open', 'true')}
+                onMouseDown={handleButtonMouseDown}
+                onClick={handleButtonClick}
                 class="tsqd-open-btn"
+                style={{
+                  cursor:
+                    isButtonDraggable() && isDragging() ? 'grabbing' : 'pointer',
+                }}
               >
                 <TanstackLogo />
               </button>
@@ -2621,6 +2811,8 @@ const stylesFactory = (
       position: fixed;
       padding: 4px;
       text-align: left;
+      user-select: none;
+      touch-action: none;
 
       display: flex;
       align-items: center;
@@ -2661,7 +2853,6 @@ const stylesFactory = (
         display: flex;
         width: 40px;
         overflow: hidden;
-        cursor: pointer;
         outline: none;
         & svg {
           position: absolute;

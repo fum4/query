@@ -52,6 +52,16 @@ export interface DevtoolsOptions {
    * Defaults to 'system'.
    */
   theme?: Theme
+  /**
+   * Set this to false to disable dragging the devtools button.
+   * Defaults to true.
+   */
+  isButtonDraggable?: boolean
+  /**
+   * Set this to false to reset the button to initial position when the page is refreshed.
+   * Defaults to true.
+   */
+  persistButtonPosition?: boolean
 }
 
 export function ReactQueryDevtools(
@@ -68,6 +78,8 @@ export function ReactQueryDevtools(
     shadowDOMTarget,
     hideDisabledQueries,
     theme,
+    isButtonDraggable,
+    persistButtonPosition,
   } = props
   const [devtools] = React.useState(
     new TanstackQueryDevtools({
@@ -83,6 +95,8 @@ export function ReactQueryDevtools(
       shadowDOMTarget,
       hideDisabledQueries,
       theme,
+      isButtonDraggable,
+      persistButtonPosition,
     }),
   )
 
@@ -113,6 +127,14 @@ export function ReactQueryDevtools(
   React.useEffect(() => {
     devtools.setTheme(theme)
   }, [theme, devtools])
+
+  React.useEffect(() => {
+    devtools.setIsButtonDraggable(isButtonDraggable ?? true)
+  }, [isButtonDraggable, devtools])
+
+  React.useEffect(() => {
+    devtools.setPersistButtonPosition(persistButtonPosition ?? true)
+  }, [persistButtonPosition, devtools])
 
   React.useEffect(() => {
     if (ref.current) {
